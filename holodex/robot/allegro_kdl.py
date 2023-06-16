@@ -49,7 +49,7 @@ class AllegroKDL(object):
         return output_frame[:3, 3], output_frame[:3, :3]
 
     def finger_inverse_kinematics(self, finger_type, input_position, seed = None):
-        # Checking if the input figner type is a valid one
+        # Checking if the input finger type is a valid one
         if finger_type not in self.hand_configs['fingers'].keys():
             print('Finger type does not exist')
             return
