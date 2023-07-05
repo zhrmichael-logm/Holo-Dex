@@ -122,5 +122,10 @@ OCULUS_VIEW_LIMITS = {
     'z_limits': [-0.04, 0.04]
 }
 
+# SenseGlove NOVA glove
+# ROS Topic names
+SG_LEFT_TRANSFORM_COORDS_TOPIC = "/senseglove/0/lh/senseglove_states"
+
+
 # Other params
 VR_FREQ = 60

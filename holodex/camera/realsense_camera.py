@@ -80,7 +80,7 @@ class RealSenseRobotStream(object):
 
     def stream(self):
         print("Starting stream!\n")
-        while True:
+        while rospy.is_shutdown() is False:
             color_image, depth_image = self.get_rgb_depth_images()
             color_image, depth_image = rotate_image(color_image, self.rotation_angle), rotate_image(depth_image, self.rotation_angle)
 

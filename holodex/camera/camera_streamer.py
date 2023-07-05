@@ -27,7 +27,7 @@ class RobotCameraStreamer(object):
         return data
 
     def stream(self):
-        while True:
+        while rospy.is_shutdown() is False:
             if self.robot_image_subscriber.get_image() is None:
                 continue
 
