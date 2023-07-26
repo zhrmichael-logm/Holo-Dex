@@ -32,6 +32,11 @@ def start_oculus_detector(options):
     detector = OculusVRHandDetector(options['host'], options['keypoint_stream_port'])
     detector.stream()
 
+def start_simulation():
+    notify_process_start("Starting Allegro Hand Simulation Process")
+    avatar_sim = AvatarSimEnv()
+    avatar_sim.simulate()
+
 def keypoint_transform(detector_type):
     notify_process_start("Starting Keypoint transformation Process")
     transformer = TransformHandCoords(detector_type)
@@ -65,6 +70,11 @@ def mp_teleop(detector_config):
 def vr_teleop(detector_config):
     notify_process_start("Starting Teleoperation Process")
     teleop = VRDexArmTeleOp()
+    teleop.move(detector_config['finger_configs'])
+
+def sg_teleop(detector_config):
+    notify_process_start("Starting Teleoperation Process")
+    teleop = SGHapticTeleOp()
     teleop.move(detector_config['finger_configs'])
 
 def deploy_model(configs):
@@ -136,8 +146,14 @@ def get_teleop_process(teleop_configs):
         teleop_process = Process(target = mp_teleop, args = (teleop_configs, ))
     elif teleop_configs.tracker.type == 'VR':
         teleop_process = Process(target = vr_teleop, args = (teleop_configs, ))
+    elif teleop_configs.tracker.type == 'SG':
+        teleop_process = Process(target = sg_teleop, args = (teleop_configs, ))
 
     return teleop_process
+
+def get_simulation_process():
+    simulation_process = Process(target = start_simulation)
+    return simulation_process
 
 def get_deploy_process(configs):
     deploy_process = Process(target = deploy_model, args = (configs, ))

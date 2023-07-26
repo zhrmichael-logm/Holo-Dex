@@ -4,6 +4,8 @@ import holodex
 # Allegro
 ALLEGRO_JOINT_STATE_TOPIC = '/allegroHand/joint_states'
 ALLEGRO_COMMANDED_JOINT_STATE_TOPIC = '/allegroHand/commanded_joint_states'
+ALLEGRO_TELEOP_ANGLES_TOPIC = '/allegroHand/teleop_angles'
+ALLEGRO_WRIST_POSE_TOPIC = '/allegroHand/wrist_pose'
 ALLEGRO_JOINTS_PER_FINGER = 4
 ALLEGRO_JOINT_OFFSETS = {
     'index': 0,
@@ -126,6 +128,35 @@ OCULUS_VIEW_LIMITS = {
 # ROS Topic names
 SG_LEFT_TRANSFORM_COORDS_TOPIC = "/senseglove/0/lh/senseglove_states"
 
+# File paths
+SG_THUMB_BOUNDS_PATH = path.join(CALIBRATION_FILES_PATH, 'sg_thumb_bounds.npy')
+SG_DISPLAY_THUMB_BOUNDS_PATH = path.join(CALIBRATION_FILES_PATH, 'sg_thumb_plot_bounds.npy')
+
+# Joint Information
+SG_NUM_KEYPOINTS = 20
+SG_NUM_JOINTS = 15
+SG_KEYPOINTS = {
+    'thumb': [0, 1, 2, 3], # CMC, MCP, PIP, TIP
+    'index': [4, 5, 6, 7], # MCP, PIP, DIP, TIP
+    'middle': [8, 9, 10, 11], # MCP, PIP, DIP, TIP
+    'ring': [12, 13, 14, 15], # MCP, PIP, DIP, TIP
+    'pinky': [16, 17, 18, 19], # MCP, PIP, DIP, TIP (all 0 for NOVA)
+    'knuckles': [4, 8, 12],  # MCP of index, middle, ring fingers
+    'tips': [3, 7, 11, 15] # TIP of thumb, index, middle & ring fingers
+}
+SG_JOINTS = {
+    'thumb': [0, 1, 2], # CMC, MCP, PIP
+    'index': [3, 4, 5], # MCP, PIP, DIP
+    'middle': [6, 7, 8], # MCP, PIP, DIP
+    'ring': [9, 10, 11], # MCP, PIP, DIP
+    'pinky': [12, 13, 14], # MCP, PIP, DIP (all 0 for NOVA)
+}
+
+SG_JOINT_DIRECTION = {
+    'pronation': 0,
+    'flexion': 1,
+    'abduction': 2
+}
 
 # Other params
 VR_FREQ = 60

@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import rospy
 from std_msgs.msg import Float64MultiArray
+from senseglove_shared_resources.msg import SenseGloveState
 from holodex.constants import *
 from holodex.utils.files import *
 
@@ -222,6 +223,144 @@ class OculusThumbBoundCalibrator(object):
 
         np.save(VR_DISPLAY_THUMB_BOUNDS_PATH, handpose_coords)
         np.save(VR_THUMB_BOUNDS_PATH, thumb_bounds)
+
+        return thumb_index_bounds, thumb_middle_bounds, thumb_ring_bounds
+
+    def get_bounds(self):
+        sys.stdin = open(0) # To take inputs while spawning multiple processes
+
+        if check_file(VR_THUMB_BOUNDS_PATH):
+            use_calibration_file = input("\nCalibration file already exists. Do you want to create a new one? Press y for Yes else press Enter")
+
+            if use_calibration_file == "y":
+                thumb_index_bounds, thumb_middle_bounds, thumb_ring_bounds = self._calibrate()
+            else:
+                calibrated_bounds = np.load(VR_THUMB_BOUNDS_PATH)
+                thumb_index_bounds = calibrated_bounds[:5]
+                thumb_middle_bounds = calibrated_bounds[5:10]
+                thumb_ring_bounds = calibrated_bounds[10:]
+
+        else:
+            print("\nNo calibration file found. Need to calibrate hand poses.\n")
+            thumb_index_bounds, thumb_middle_bounds, thumb_ring_bounds = self._calibrate()
+
+        return thumb_index_bounds, thumb_middle_bounds, thumb_ring_bounds
+    
+
+class SenseGolveThumbBoundCalibrator(object):
+    def __init__(self):
+        # Initializing the hand pose subscriber
+        self.hand_positions = None
+        self.hand_rotations = None
+        self.hand_angles = None
+        self.wrist_position = None
+        self.wrist_rotation = None
+
+        rospy.Subscriber(SG_LEFT_TRANSFORM_COORDS_TOPIC, SenseGloveState, self._callback_sg_state, queue_size=1, buff_size=2**18)
+
+        # Storage paths
+        make_dir(CALIBRATION_FILES_PATH)
+
+    def _callback_sg_state(self, msg):
+        # self.hand_coords = np.array(list(coord_data.data)).reshape(OCULUS_NUM_KEYPOINTS, 3)
+        self.hand_angles = np.array([[msg.hand_angles[i].x, msg.hand_angles[i].y, msg.hand_angles[i].z] for i in range(SG_NUM_JOINTS)]).reshape(SG_NUM_JOINTS, 3)
+        self.hand_positions = np.array([[msg.joint_positions[j].x, msg.joint_positions[j].y, msg.joint_positions[j].z] for j in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 3)
+        self.hand_rotations = np.array([[msg.joint_rotations[k].x, msg.joint_rotations[k].y, msg.joint_rotations[k].z, msg.joint_rotations[k].w] for k in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 4)
+        self.wrist_position = np.array([msg.wrist_position[0].x, msg.wrist_position[0].y, msg.wrist_position[0].z])
+        self.wrist_rotation = np.array([msg.wrist_rotation[0].x, msg.wrist_rotation[0].y, msg.wrist_rotation[0].z, msg.wrist_rotation[0].w])
+
+    def _get_thumb_tip_coord(self):
+        # return self.hand_coords[SG_JOINTS['thumb'][-1]]
+        return self.hand_positions[SG_JOINTS['thumb'][-1]]
+
+    def _get_xy_coords(self):
+        return [self._get_thumb_tip_coord()[0], self._get_thumb_tip_coord()[1]]
+
+    def _get_z_coord(self):
+        return self._get_thumb_tip_coord()[-1]
+
+    def _calibrate(self):
+        register = input("Place the thumb in the top right corner.")
+        top_right_coord = self._get_xy_coords()
+
+        register = input("Place the thumb in the bottom right corner.")
+        bottom_right_coord = self._get_xy_coords()
+
+        register = input("Place the thumb in the index bottom corner.")
+        index_bottom_coord = self._get_xy_coords()
+
+        register = input("Place the thumb in the index top corner.")
+        index_top_coord = self._get_xy_coords()
+
+        register = input("Stretch the thumb to get highest index bound z value.")
+        index_high_z = self._get_z_coord()
+
+        register = input("Relax the thumb to get the lowest index bound z value.")
+        index_low_z = self._get_z_coord()
+
+        register = input("Place the thumb in the middle bottom corner.")
+        middle_bottom_coord = self._get_xy_coords()
+
+        register = input("Place the thumb in the middle top corner.")
+        middle_top_coord = self._get_xy_coords()
+
+        register = input("Stretch the thumb to get highest middle bound z value.")
+        middle_high_z = self._get_z_coord()
+
+        register = input("Relax the thumb to get the lowest middle bound z value.")
+        middle_low_z = self._get_z_coord()
+
+        register = input("Place the thumb in the ring bottom corner.")
+        ring_bottom_coord = self._get_xy_coords()
+
+        register = input("Place the thumb in the ring top corner.")
+        ring_top_coord = self._get_xy_coords()
+        
+        register = input("Stretch the thumb to get highest ring bound z value.")
+        ring_high_z = self._get_z_coord()
+
+        register = input("Relax the thumb to get the lowest ring bound z value.")
+        ring_low_z = self._get_z_coord()
+
+        thumb_index_bounds = np.array([
+            top_right_coord,
+            bottom_right_coord,
+            index_bottom_coord,
+            index_top_coord,
+            [index_low_z, index_high_z]
+        ])
+
+        thumb_middle_bounds = np.array([
+            index_top_coord,
+            index_bottom_coord,
+            middle_bottom_coord,
+            middle_top_coord,
+            [middle_low_z, middle_high_z]
+        ])
+
+        thumb_ring_bounds = np.array([
+            middle_top_coord,
+            middle_bottom_coord,
+            ring_bottom_coord,
+            ring_top_coord,
+            [ring_low_z, ring_high_z]
+        ])
+
+        thumb_bounds = np.vstack([thumb_index_bounds, thumb_middle_bounds, thumb_ring_bounds])
+
+        handpose_coords = np.array([
+            top_right_coord,
+            bottom_right_coord,
+            index_bottom_coord,
+            middle_bottom_coord,
+            ring_bottom_coord,
+            ring_top_coord,
+            middle_top_coord,
+            index_top_coord
+        ])
+
+        np.save(SG_DISPLAY_THUMB_BOUNDS_PATH, handpose_coords)
+        np.save(SG_THUMB_BOUNDS_PATH, thumb_bounds)
 
         return thumb_index_bounds, thumb_middle_bounds, thumb_ring_bounds
 
