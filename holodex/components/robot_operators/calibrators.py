@@ -367,13 +367,13 @@ class SenseGolveThumbBoundCalibrator(object):
     def get_bounds(self):
         sys.stdin = open(0) # To take inputs while spawning multiple processes
 
-        if check_file(VR_THUMB_BOUNDS_PATH):
+        if check_file(SG_THUMB_BOUNDS_PATH):
             use_calibration_file = input("\nCalibration file already exists. Do you want to create a new one? Press y for Yes else press Enter")
 
             if use_calibration_file == "y":
                 thumb_index_bounds, thumb_middle_bounds, thumb_ring_bounds = self._calibrate()
             else:
-                calibrated_bounds = np.load(VR_THUMB_BOUNDS_PATH)
+                calibrated_bounds = np.load(SG_THUMB_BOUNDS_PATH)
                 thumb_index_bounds = calibrated_bounds[:5]
                 thumb_middle_bounds = calibrated_bounds[5:10]
                 thumb_ring_bounds = calibrated_bounds[10:]

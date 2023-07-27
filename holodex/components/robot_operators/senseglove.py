@@ -1,4 +1,5 @@
 from math import pi
+import time
 import rospy
 from std_msgs.msg import Float64MultiArray
 from senseglove_shared_resources.msg import SenseGloveState
@@ -249,7 +250,7 @@ class SGHapticTeleOp(object):
             # CMC pronation
             desired_joint_angles[1 + ALLEGRO_JOINT_OFFSETS['thumb']] = finger_angles[0][SG_JOINT_DIRECTION['pronation']] + pi/3.0
             # MCP flexion
-            desired_joint_angles[2 + ALLEGRO_JOINT_OFFSETS['thumb']] = (finger_angles[0][SG_JOINT_DIRECTION['flexion']] + finger_angles[1][SG_JOINT_DIRECTION['flexion']]) * 1.0
+            desired_joint_angles[2 + ALLEGRO_JOINT_OFFSETS['thumb']] = (finger_angles[0][SG_JOINT_DIRECTION['flexion']] + finger_angles[1][SG_JOINT_DIRECTION['flexion']]) * 3.0
             # PIP flexion
             desired_joint_angles[3 + ALLEGRO_JOINT_OFFSETS['thumb']] = finger_angles[2][SG_JOINT_DIRECTION['flexion']] / 1.0
         else:
@@ -268,12 +269,18 @@ class SGHapticTeleOp(object):
         print("Start controlling the robot hand using SenseGlove Haptic Nova Glove.\n")
 
         while not rospy.is_shutdown():
-            if self.hand_angles is not None and self.robot.get_hand_position() is not None:
+            # ts = time.time()
+            # if self.hand_angles is not None and self.robot.get_hand_position() is not None:
+            if self.hand_angles is not None:
+                
                 # Obtaining the desired angles
                 desired_joint_angles = self.motion(finger_configs)
-
+                
                 # Move the hand based on the desired angles
-                self.robot.move(desired_joint_angles)
+                self.robot.move(desired_joint_angles, self.wrist_position, self.wrist_rotation)
+
+            # te = time.time()
+            # rospy.loginfo("Time taken for a loop: {} ms".format((te - ts) * 1000))
 
 
 if __name__ == "__main__":

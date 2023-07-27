@@ -38,10 +38,10 @@ class AvatarSimEnv(object):
         self.timestep = self.sim_config['time_step']
     
     def _callback_teleop_angles(self, teleop_angles):
-        self.desired_angles = np.array(list(teleop_angles.data)).reshape(16, 1)
+        self.desired_angles = np.array(list(teleop_angles.data)).reshape(16, )
     
     def _callback_wrist_pose(self, wrist_pose):
-        self.desired_wrist_pose = np.array(list(wrist_pose.data)).reshape(7, 1)
+        self.desired_wrist_pose = np.array(list(wrist_pose.data)).reshape(7, )
 
         # self.data.mocap_pos[0] = np.array(list(wrist_pose.data)[:3])
         # self.data.mocap_quat[0] = np.array(list(wrist_pose.data)[3:])
@@ -76,7 +76,7 @@ class AvatarSimEnv(object):
             rot = (r_M_V * R.from_quat(wrist_quat)).as_quat()
             # convert x,y,z,w to w,x,y,z
             rot = np.array([rot[3], rot[0], rot[1], rot[2]])
-
+            rospy.loginfo(f"number of steps: {self.num_steps}")
             # save initial wrist position
             if self.num_steps == 0:
                 self.wrist_pos_0 = pos.copy()
@@ -85,15 +85,17 @@ class AvatarSimEnv(object):
             # set mocap position
             self.data.mocap_pos[0] = self.mocap_pos_0 + (pos - self.wrist_pos_0)
             self.data.mocap_quat[0] = rot
+            
+            self.num_steps += 1
 
 
-    def _step(self):
-        # self.model.step(self.data)
-        mujoco.mj_step(self.model, self.data)
+    def _step(self): 
         self._publish_joint_state()
         self._set_desired_angles()
         self._set_desired_wrist_pose()
-        self.num_steps += 1
+        # self.model.step(self.data)
+        mujoco.mj_step(self.model, self.data)
+        
 
 
     def simulate(self):

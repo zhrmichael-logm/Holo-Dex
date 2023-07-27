@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import rospy
 from sensor_msgs.msg import JointState
@@ -21,7 +22,7 @@ class AllegroHandSim(object):
 
         self.allegro_joint_state = None
         # self.allegro_commanded_joint_state = None
-        rospy.Subscriber(ALLEGRO_JOINT_STATE_TOPIC, JointState, self._callback_joint_state, queue_size = 1)
+        rospy.Subscriber(ALLEGRO_JOINT_STATE_TOPIC, JointState, self._callback_joint_state, queue_size=1)
         # rospy.Subscriber(ALLEGRO_COMMANDED_JOINT_STATE_TOPIC, JointState, self._callback_commanded_joint_state, queue_size = 1)
 
     def _callback_joint_state(self, joint_state):
@@ -132,5 +133,8 @@ class AllegroHandSim(object):
 
     def move(self, angles, wrist_pos, wrist_quat):
         # self.controller.move_hand(angles)
-        self.angle_pub.publish(angles)
-        self.wrist_pub.publish(np.hstack([wrist_pos, wrist_quat]))
+        # ts = time.time()
+        self.angle_pub.publish(Float64MultiArray(data=angles))
+        self.wrist_pub.publish(Float64MultiArray(data=np.hstack([wrist_pos, wrist_quat])))
+        # te = time.time()
+        # print("Time taken to publish: {} ms".format((te - ts) * 1000))

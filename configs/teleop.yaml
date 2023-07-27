@@ -6,6 +6,8 @@ defaults:
   - override hydra/hydra_logging: disabled  
   - override hydra/job_logging: disabled  
 
+sim: true
+
 finger_configs:
   freeze_index: false # Keep index finger fixed at [0, 0, 0, 0]
   freeze_middle: false # Keep middle finger fixed at [0, 0, 0, 0]
