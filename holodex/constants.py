@@ -127,6 +127,7 @@ OCULUS_VIEW_LIMITS = {
 # SenseGlove NOVA glove
 # ROS Topic names
 SG_LEFT_TRANSFORM_COORDS_TOPIC = "/senseglove/0/lh/senseglove_states"
+SG_RIGHT_TRANSFORM_COORDS_TOPIC = "/senseglove/0/rh/senseglove_states"
 
 # File paths
 SG_THUMB_BOUNDS_PATH = path.join(CALIBRATION_FILES_PATH, 'sg_thumb_bounds.npy')

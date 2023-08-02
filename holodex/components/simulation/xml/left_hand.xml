@@ -125,9 +125,9 @@
   <worldbody>
 
     <body name="mount" pos="0.0 0.0 0.4" euler="0. 0. 0.0" mocap="true">
-      <geom type="sphere" size="0.01" rgba="0.9 0. 0. 1"/>
+      <geom type="sphere" size="0.015" rgba="0.9 0. 0. 1"/>
 
-      <body name="palm" pos="0.0 0.0 -0.1" euler="3.1416 0 -1.57" childclass="allegro_left">
+      <body name="palm" pos="0.1 0.0 0.0" euler="0 1.5708 0" childclass="allegro_left">
         <!-- <geom name="px" fromto="0 0 0 0.1 0 0" size="0.002" type="capsule" rgba="1 0 0 1"/>
         <geom name="py" fromto="0 0 0 0 0.1 0" size="0.002" type="capsule" rgba="0 1 0 1"/>
         <geom name="pz" fromto="0 0 0 0 0 0.1" size="0.002" type="capsule" rgba="0 0 1 1"/> -->

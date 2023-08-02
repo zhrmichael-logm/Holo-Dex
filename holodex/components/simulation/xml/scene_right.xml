@@ -7,7 +7,7 @@
   <visual>
     <rgba haze="0.15 0.25 0.35 1"/>
     <quality shadowsize="8192"/>
-    <global azimuth="130" elevation="-40"/>
+    <global azimuth="220" elevation="-40"/>
   </visual>
 
   <asset>
@@ -23,11 +23,14 @@
     <light pos="0 0 1"/>
     <light pos="0.3 0 1.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" pos="0 0 -0.1" size="0 0 0.05" type="plane" material="groundplane"/>
-    <body name="object" pos="0 0 0.1">
+    <geom name="originx" fromto="0 0 0 0.1 0 0" size="0.002" type="capsule" rgba="1 0 0 1"/>
+    <geom name="originy" fromto="0 0 0 0 0.1 0" size="0.002" type="capsule" rgba="0 1 0 1"/>
+    <geom name="originz" fromto="0 0 0 0 0 0.1" size="0.002" type="capsule" rgba="0 0 1 1"/>
+    <!-- <body name="object" pos="0 0 0.1">
       <freejoint/>
       <geom type="ellipsoid" size="0.03 0.04 0.02" rgba="0.5 0.7 0.5 1" condim="6" priority="1"
         friction="0.7 0.002 0.002"/>
-    </body>
+    </body> -->
   </worldbody>
 
 </mujoco>

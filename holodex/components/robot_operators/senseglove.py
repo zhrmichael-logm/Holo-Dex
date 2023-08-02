@@ -11,7 +11,7 @@ from holodex.constants import *
 from copy import deepcopy as copy
 
 class SGHapticTeleOp(object):
-    def __init__(self, sim=False):
+    def __init__(self, sim=False, left=True):
         # Initializing the ROS Node
         rospy.init_node("senseglove_haptic_teleop")
 
@@ -23,15 +23,18 @@ class SGHapticTeleOp(object):
         self.wrist_rotation = None
 
         # rospy.Subscriber(VR_RIGHT_TRANSFORM_COORDS_TOPIC, Float64MultiArray, self._callback_hand_coords, queue_size = 1)
-        rospy.Subscriber(SG_LEFT_TRANSFORM_COORDS_TOPIC, SenseGloveState, self._callback_glove_state, queue_size=1, buff_size=2**18)
+        if left:
+            rospy.Subscriber(SG_LEFT_TRANSFORM_COORDS_TOPIC, SenseGloveState, self._callback_glove_state, queue_size=1, buff_size=2**18)
+        else:
+            rospy.Subscriber(SG_RIGHT_TRANSFORM_COORDS_TOPIC, SenseGloveState, self._callback_glove_state, queue_size=1, buff_size=2**18)
 
         # Initializing the solvers
-        self.fingertip_solver = AllegroKDLControl()    # inverse kinematics solver in kdl package
-        self.finger_joint_solver = AllegroJointControl()  # calculate joint angles from fingertip positions
+        self.fingertip_solver = AllegroKDLControl(left=left)    # inverse kinematics solver in kdl package
+        self.finger_joint_solver = AllegroJointControl(left=left)  # calculate joint angles from fingertip positions
 
         # Initializing the robot controller
         if sim:
-            self.robot = AllegroHandSim()  # Simulated Allegro Hand interface
+            self.robot = AllegroHandSim(left=left)  # Simulated Allegro Hand interface
         else: self.robot = AllegroHand()  # Real Allegro Hand interface
 
         # Initialzing the moving average queues
@@ -48,7 +51,9 @@ class SGHapticTeleOp(object):
         # Getting the bounds for the allegro hand
         allegro_bounds_path = get_path_in_package('components/robot_operators/configs/allegro_vr.yaml')
         with open(allegro_bounds_path, 'r') as file:
-            self.allegro_bounds = yaml.safe_load(file)
+            if left:
+                self.allegro_bounds = yaml.safe_load(file)['left']
+            else: self.allegro_bounds = yaml.safe_load(file)['right']
 
     def _calibrate_bounds(self):
         print("***************************************************************")
@@ -61,20 +66,21 @@ class SGHapticTeleOp(object):
     def _callback_glove_state(self, msg):
         # self.hand_coords = np.array(list(coords.data)).reshape(24, 3)
         self.hand_angles = np.array([[msg.hand_angles[i].x, msg.hand_angles[i].y, msg.hand_angles[i].z] for i in range(SG_NUM_JOINTS)]).reshape(SG_NUM_JOINTS, 3)
-        self.hand_positions = np.array([[msg.joint_positions[j].x, msg.joint_positions[j].y, msg.joint_positions[j].z] for j in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 3) / 1000.0
+        self.hand_positions = np.array([[msg.joint_positions[j].y, msg.joint_positions[j].x, -msg.joint_positions[j].z] for j in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 3) / 1000.0
         self.hand_rotations = np.array([[msg.joint_rotations[k].x, msg.joint_rotations[k].y, msg.joint_rotations[k].z, msg.joint_rotations[k].w] for k in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 4)
         self.wrist_position = np.array([msg.wrist_position[0].x, msg.wrist_position[0].y, msg.wrist_position[0].z]) / 1000.0
         self.wrist_rotation = np.array([msg.wrist_rotation[0].x, msg.wrist_rotation[0].y, msg.wrist_rotation[0].z, msg.wrist_rotation[0].w])
 
     def _get_finger_coords(self, finger_type):
         # return np.vstack([self.hand_coords[0], self.hand_coords[OCULUS_JOINTS[finger_type]]])
-        return self.hand_positions[SG_JOINTS[finger_type]]
+        return self.hand_positions[SG_KEYPOINTS[finger_type]]
     
     def _get_finger_angles(self, finger_type):
         return self.hand_angles[SG_JOINTS[finger_type]]
 
     def _get_2d_thumb_angles(self, curr_angles):
         if coord_in_bound(self.thumb_index_bounds[:4], self._get_finger_coords('thumb')[-1][:2]) > -1:
+            print("thumb index bounds")
             return self.fingertip_solver.thumb_motion_2D(
                 hand_coordinates = self._get_finger_coords('thumb')[-1], 
                 xy_hand_bounds = self.thumb_index_bounds[:4],
@@ -89,6 +95,7 @@ class SGHapticTeleOp(object):
                 curr_angles = curr_angles
             )
         elif coord_in_bound(self.thumb_middle_bounds[:4], self._get_finger_coords('thumb')[-1][:2]) > -1:
+            print("thumb middle bounds")
             return self.fingertip_solver.thumb_motion_2D(
                 hand_coordinates = self._get_finger_coords('thumb')[-1], 
                 xy_hand_bounds = self.thumb_middle_bounds[:4],
@@ -103,6 +110,7 @@ class SGHapticTeleOp(object):
                 curr_angles = curr_angles
             )
         elif coord_in_bound(self.thumb_ring_bounds[:4], self._get_finger_coords('thumb')[-1][:2]) > -1:
+            print("thumb ring bounds")
             return self.fingertip_solver.thumb_motion_2D(
                 hand_coordinates = self._get_finger_coords('thumb')[-1], 
                 xy_hand_bounds = self.thumb_ring_bounds[:4],
@@ -117,10 +125,12 @@ class SGHapticTeleOp(object):
                 curr_angles = curr_angles
             )
         else:
+            print("thumb no bounds")
             return curr_angles
 
     def _get_3d_thumb_angles(self, curr_angles):
         if coord_in_bound(self.thumb_index_bounds[:4], self._get_finger_coords('thumb')[-1][:2]) > -1:
+            print("thumb index bounds")
             return self.fingertip_solver.thumb_motion_3D(
                 hand_coordinates = self._get_finger_coords('thumb')[-1], 
                 xy_hand_bounds = self.thumb_index_bounds[:4],
@@ -136,6 +146,7 @@ class SGHapticTeleOp(object):
                 curr_angles = curr_angles
             )
         elif coord_in_bound(self.thumb_middle_bounds[:4], self._get_finger_coords('thumb')[-1][:2]) > -1:
+            print("thumb middle bounds")
             return self.fingertip_solver.thumb_motion_3D(
                 hand_coordinates = self._get_finger_coords('thumb')[-1], 
                 xy_hand_bounds = self.thumb_middle_bounds[:4],
@@ -151,6 +162,7 @@ class SGHapticTeleOp(object):
                 curr_angles = curr_angles
             )
         elif coord_in_bound(self.thumb_ring_bounds[:4], self._get_finger_coords('thumb')[-1][:2]) > -1:
+            print("thumb ring bounds")
             return self.fingertip_solver.thumb_motion_3D(
                 hand_coordinates = self._get_finger_coords('thumb')[-1], 
                 xy_hand_bounds = self.thumb_ring_bounds[:4],
@@ -166,6 +178,7 @@ class SGHapticTeleOp(object):
                 curr_angles = curr_angles
             )
         else:
+            print("thumb no bounds")
             return curr_angles
 
     def motion(self, finger_configs):
@@ -254,6 +267,7 @@ class SGHapticTeleOp(object):
             # PIP flexion
             desired_joint_angles[3 + ALLEGRO_JOINT_OFFSETS['thumb']] = finger_angles[2][SG_JOINT_DIRECTION['flexion']] / 1.0
         else:
+            # print(f"thumb tip coords: {self._get_finger_coords('thumb')[-1][:]}")
             if finger_configs['three_dim']:
                 desired_joint_angles = self._get_3d_thumb_angles(desired_joint_angles)
             else:
@@ -275,6 +289,7 @@ class SGHapticTeleOp(object):
                 
                 # Obtaining the desired angles
                 desired_joint_angles = self.motion(finger_configs)
+                # print(f"Desired thumb joint angles: {desired_joint_angles[-4:]}")
                 
                 # Move the hand based on the desired angles
                 self.robot.move(desired_joint_angles, self.wrist_position, self.wrist_rotation)

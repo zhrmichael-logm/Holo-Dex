@@ -1,2 +1,3 @@
-scene_name: "scene_left_empty"
-time_step: 0.001
+# scene_name: "scene_left_empty"
+scene_name: "scene_right"
+time_step: 0.0005

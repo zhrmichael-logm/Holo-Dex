@@ -251,10 +251,10 @@ class SenseGolveThumbBoundCalibrator(object):
     def __init__(self):
         # Initializing the hand pose subscriber
         self.hand_positions = None
-        self.hand_rotations = None
-        self.hand_angles = None
-        self.wrist_position = None
-        self.wrist_rotation = None
+        # self.hand_rotations = None
+        # self.hand_angles = None
+        # self.wrist_position = None
+        # self.wrist_rotation = None
 
         rospy.Subscriber(SG_LEFT_TRANSFORM_COORDS_TOPIC, SenseGloveState, self._callback_sg_state, queue_size=1, buff_size=2**18)
 
@@ -262,16 +262,13 @@ class SenseGolveThumbBoundCalibrator(object):
         make_dir(CALIBRATION_FILES_PATH)
 
     def _callback_sg_state(self, msg):
-        # self.hand_coords = np.array(list(coord_data.data)).reshape(OCULUS_NUM_KEYPOINTS, 3)
-        self.hand_angles = np.array([[msg.hand_angles[i].x, msg.hand_angles[i].y, msg.hand_angles[i].z] for i in range(SG_NUM_JOINTS)]).reshape(SG_NUM_JOINTS, 3)
-        self.hand_positions = np.array([[msg.joint_positions[j].x, msg.joint_positions[j].y, msg.joint_positions[j].z] for j in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 3)
-        self.hand_rotations = np.array([[msg.joint_rotations[k].x, msg.joint_rotations[k].y, msg.joint_rotations[k].z, msg.joint_rotations[k].w] for k in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 4)
-        self.wrist_position = np.array([msg.wrist_position[0].x, msg.wrist_position[0].y, msg.wrist_position[0].z])
-        self.wrist_rotation = np.array([msg.wrist_rotation[0].x, msg.wrist_rotation[0].y, msg.wrist_rotation[0].z, msg.wrist_rotation[0].w])
+        # self.hand_positions = np.array([[msg.joint_positions[j].x, msg.joint_positions[j].y, msg.joint_positions[j].z] for j in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 3) / 1000.0
+        self.hand_positions = np.array([[msg.joint_positions[j].y, msg.joint_positions[j].x, -msg.joint_positions[j].z] for j in range(SG_NUM_KEYPOINTS)]).reshape(SG_NUM_KEYPOINTS, 3) / 1000.0
+
 
     def _get_thumb_tip_coord(self):
         # return self.hand_coords[SG_JOINTS['thumb'][-1]]
-        return self.hand_positions[SG_JOINTS['thumb'][-1]]
+        return self.hand_positions[SG_KEYPOINTS['thumb'][-1]]
 
     def _get_xy_coords(self):
         return [self._get_thumb_tip_coord()[0], self._get_thumb_tip_coord()[1]]

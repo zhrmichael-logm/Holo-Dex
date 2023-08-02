@@ -74,7 +74,7 @@ def vr_teleop(detector_config):
 
 def sg_teleop(detector_config):
     notify_process_start("Starting Teleoperation Process")
-    teleop = SGHapticTeleOp(detector_config['sim'])
+    teleop = SGHapticTeleOp(sim=detector_config['sim'], left=detector_config['left'])
     teleop.move(detector_config['finger_configs'])
 
 def deploy_model(configs):

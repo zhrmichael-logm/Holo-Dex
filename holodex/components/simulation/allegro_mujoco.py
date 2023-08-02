@@ -11,7 +11,7 @@ from scipy.spatial.transform import Rotation as R
 
 # a class for allegro hand simulation
 class AvatarSimEnv(object):
-    def __init__(self, ):
+    def __init__(self, left=False):
         rospy.init_node('avatar_sim_env', anonymous=True)
         self.sim_config = get_yaml_data(get_path_in_package("components/simulation/configs/allegro_env.yaml"))
 
@@ -71,12 +71,16 @@ class AvatarSimEnv(object):
             wrist_quat = self.desired_wrist_pose[3:].copy()
             
             # rotate wrist pose to align with mujoco world frame
-            r_M_V = R.from_quat([0.701, 0, 0, 0.701])
+            # r_M_V = R.from_quat([0.701, 0, 0, 0.701])
+            r_M_V = R.from_euler('xyz', [np.pi/2, 0, 0])
             pos = r_M_V.apply(wrist_pos)
             rot = (r_M_V * R.from_quat(wrist_quat)).as_quat()
+            # pos = wrist_pos
+            # rot = wrist_quat
+
             # convert x,y,z,w to w,x,y,z
             rot = np.array([rot[3], rot[0], rot[1], rot[2]])
-            rospy.loginfo(f"number of steps: {self.num_steps}")
+            # rospy.loginfo(f"number of steps: {self.num_steps}")
             # save initial wrist position
             if self.num_steps == 0:
                 self.wrist_pos_0 = pos.copy()

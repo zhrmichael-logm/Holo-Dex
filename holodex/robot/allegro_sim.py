@@ -11,10 +11,13 @@ from copy import deepcopy as copy
 
 
 class AllegroHandSim(object):
-    def __init__(self):
-        self.kdl_solver = AllegroKDL()
+    def __init__(self, left = False):
+        self.kdl_solver = AllegroKDL(left=left)
         # self.controller = DexArmControl()
-        self.joint_limit_config = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))['links_info']
+        if left:
+            self.joint_limit_config = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))['left']['links_info']
+        else:
+            self.joint_limit_config = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))['right']['links_info']
 
         # publisher for joint angle control
         self.angle_pub = rospy.Publisher(ALLEGRO_TELEOP_ANGLES_TOPIC, Float64MultiArray, queue_size=1)

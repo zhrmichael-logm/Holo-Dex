@@ -6,11 +6,14 @@ from holodex.utils.vec_ops import *
 
 
 class AllegroJointControl(object):
-    def __init__(self, bounded_angles = True):
+    def __init__(self, bounded_angles = True, left = False):
         np.set_printoptions(suppress = True)
 
         self.hand_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_info.yaml"))
-        self.finger_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))
+        if left:
+            self.finger_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))['left']
+        else: self.finger_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))['right']
+        
         self.bound_info = get_yaml_data(get_path_in_package("robot/configs/allegro_bounds.yaml"))
 
         self.time_steps = self.bound_info['time_steps']

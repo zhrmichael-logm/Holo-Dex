@@ -3,13 +3,18 @@ from holodex.utils.files import *
 
 
 class AllegroKDL(object):
-    def __init__(self):
+    def __init__(self, left):
         # Getting the URDF path
-        urdf_path = get_path_in_package("robot/assets/allegro_hand_right.urdf")
+        if left:
+            urdf_path = get_path_in_package("robot/assets/allegro_hand_left.urdf")
+        else: urdf_path = get_path_in_package("robot/assets/allegro_hand_right.urdf")
 
         # Loading Allegro Hand configs
         self.hand_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_info.yaml"))
-        self.finger_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))
+        
+        if left:
+            self.finger_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))['left']
+        else: self.finger_configs = get_yaml_data(get_path_in_package("robot/configs/allegro_link_info.yaml"))['right']
 
         # Parsing chains from the urdf file
         self.chains = {}
